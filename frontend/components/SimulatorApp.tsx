@@ -6,7 +6,8 @@ import { ScenarioSelector } from './ScenarioSelector'
 import { ResultsDashboard } from './ResultsDashboard'
 import { runSimulation } from '@/lib/api'
 import type { Holding, Scenario, SimulateResponse } from '@/types'
-import { AlertCircle, PlayCircle } from 'lucide-react'
+import { AlertCircle, Zap } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type Step = 'build' | 'results'
 
@@ -30,28 +31,19 @@ export function SimulatorApp() {
     setLoading(true)
     setError(null)
     try {
-      const data = await runSimulation({
-        holdings,
-        scenarioId: selectedScenario.id,
-      })
+      const data = await runSimulation({ holdings, scenarioId: selectedScenario.id })
       setResult(data)
       setStep('results')
     } catch (err: unknown) {
-      const msg =
+      setError(
         err instanceof Error
           ? err.message
-          : 'Simulation failed. Ensure the backend and data service are running.'
-      setError(msg)
+          : 'Simulation failed. Ensure the backend and data service are running.',
+      )
     } finally {
       setLoading(false)
     }
   }, [holdings, selectedScenario, isReady])
-
-  const handleReset = () => {
-    setStep('build')
-    setResult(null)
-    setError(null)
-  }
 
   if (step === 'results' && result && selectedScenario) {
     return (
@@ -59,28 +51,37 @@ export function SimulatorApp() {
         result={result}
         scenario={selectedScenario}
         holdings={holdings}
-        onReset={handleReset}
+        onReset={() => { setStep('build'); setResult(null); setError(null) }}
       />
     )
   }
 
+  const canRun = isReady && !loading
+  const hint = !holdings.length
+    ? 'Add at least one holding'
+    : !selectedScenario
+    ? 'Select a stress scenario'
+    : totalWeight !== 100
+    ? `Weights sum to ${totalWeight}% — must be 100%`
+    : null
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left: Portfolio Builder */}
-      <div className="space-y-6">
+      {/* Left column */}
+      <div className="space-y-4">
         <PortfolioBuilder holdings={holdings} onChange={setHoldings} />
 
-        {/* Preset portfolios */}
-        <div className="bg-surface-card rounded-xl border border-slate-700/50 p-5">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            Load Preset
+        {/* Presets */}
+        <div className="glass rounded-2xl border border-[rgba(99,132,184,0.12)] p-5">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">
+            Load Preset Portfolio
           </p>
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((preset) => (
               <button
                 key={preset.name}
                 onClick={() => setHoldings(preset.holdings)}
-                className="text-xs px-3 py-1.5 rounded-lg bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors"
+                className="text-xs px-3 py-1.5 rounded-lg bg-bg-elevated border border-[rgba(99,132,184,0.1)] text-slate-400 hover:text-slate-200 hover:border-[rgba(99,132,184,0.25)] transition-all"
               >
                 {preset.name}
               </button>
@@ -89,51 +90,51 @@ export function SimulatorApp() {
         </div>
       </div>
 
-      {/* Right: Scenario Selector + Run */}
-      <div className="space-y-6">
+      {/* Right column */}
+      <div className="space-y-4">
         <ScenarioSelector selected={selectedScenario} onSelect={setSelectedScenario} />
 
-        {/* Weight validation warning */}
+        {/* Weight warning */}
         {holdings.length > 0 && totalWeight !== 100 && (
-          <div className="flex items-center gap-2 text-amber-400 text-sm bg-amber-400/10 rounded-lg px-4 py-3 border border-amber-400/20">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-2 text-amber-400 text-xs bg-amber-400/8 rounded-xl px-4 py-3 border border-amber-400/15">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             Weights sum to {totalWeight}% — must equal 100%
           </div>
         )}
 
         {error && (
-          <div className="flex items-center gap-2 text-red-400 text-sm bg-red-400/10 rounded-lg px-4 py-3 border border-red-400/20">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="flex items-start gap-2 text-red-400 text-xs bg-red-400/8 rounded-xl px-4 py-3 border border-red-400/15">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             {error}
           </div>
         )}
 
+        {/* Run button */}
         <button
           onClick={handleRunSimulation}
-          disabled={!isReady || loading}
-          className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-accent-gold text-slate-900 font-bold text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 active:scale-[0.99] transition-all"
+          disabled={!canRun}
+          className={cn(
+            'w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-base transition-all',
+            canRun
+              ? 'bg-gold text-bg hover:brightness-110 active:scale-[0.99] shadow-lg shadow-gold/10'
+              : 'bg-[rgba(212,175,55,0.1)] text-gold/30 border border-gold/10 cursor-not-allowed',
+          )}
         >
           {loading ? (
             <>
-              <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-bg/20 border-t-bg rounded-full animate-spin" />
               Running Simulation…
             </>
           ) : (
             <>
-              <PlayCircle className="w-5 h-5" />
+              <Zap className="w-5 h-5" />
               Run Stress Test
             </>
           )}
         </button>
 
-        {!isReady && !loading && (
-          <p className="text-center text-xs text-slate-500">
-            {holdings.length === 0
-              ? 'Add at least one holding'
-              : !selectedScenario
-              ? 'Select a stress scenario'
-              : 'Weights must sum to 100%'}
-          </p>
+        {hint && !loading && (
+          <p className="text-center text-xs text-slate-600">{hint}</p>
         )}
       </div>
     </div>

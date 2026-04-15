@@ -21,18 +21,9 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
     const tickerVal = ticker.trim().toUpperCase()
     const weightVal = parseFloat(weight)
 
-    if (!tickerVal) {
-      setInputError('Enter a ticker symbol')
-      return
-    }
-    if (isNaN(weightVal) || weightVal <= 0 || weightVal > 100) {
-      setInputError('Weight must be between 1 and 100')
-      return
-    }
-    if (holdings.some((h) => h.ticker === tickerVal)) {
-      setInputError(`${tickerVal} is already in the portfolio`)
-      return
-    }
+    if (!tickerVal) { setInputError('Enter a ticker symbol'); return }
+    if (isNaN(weightVal) || weightVal <= 0 || weightVal > 100) { setInputError('Weight must be 1–100'); return }
+    if (holdings.some((h) => h.ticker === tickerVal)) { setInputError(`${tickerVal} already added`); return }
 
     setInputError(null)
     onChange([...holdings, { ticker: tickerVal, weight: weightVal }])
@@ -53,19 +44,19 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
   }
 
   return (
-    <div className="bg-surface-card rounded-xl border border-slate-700/50 p-5">
+    <div className="glass rounded-2xl border border-[rgba(99,132,184,0.12)] p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
           Portfolio Holdings
         </h2>
         <div
           className={cn(
-            'text-xs font-mono px-2 py-1 rounded-md',
+            'text-xs font-mono px-2.5 py-1 rounded-lg border',
             totalWeight === 100
-              ? 'bg-green-500/10 text-green-400'
+              ? 'bg-green-500/10 text-green-400 border-green-500/20'
               : totalWeight > 100
-              ? 'bg-red-500/10 text-red-400'
-              : 'bg-amber-500/10 text-amber-400',
+              ? 'bg-red-500/10 text-red-400 border-red-500/20'
+              : 'bg-amber-500/10 text-amber-400 border-amber-500/20',
           )}
         >
           {totalWeight}% / 100%
@@ -86,7 +77,13 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
         </div>
       )}
 
-      {/* Add holding form */}
+      {holdings.length === 0 && (
+        <p className="text-slate-600 text-sm text-center py-5">
+          Add holdings below or load a preset
+        </p>
+      )}
+
+      {/* Add form */}
       <div className="space-y-2">
         <div className="flex gap-2">
           <input
@@ -96,7 +93,7 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
             onChange={(e) => setTicker(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
             maxLength={10}
-            className="flex-1 bg-slate-800/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-accent-gold/50 focus:ring-1 focus:ring-accent-gold/20 transition-colors"
+            className="flex-1 bg-bg-elevated border border-[rgba(99,132,184,0.12)] rounded-xl px-3.5 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/10 transition-all"
           />
           <input
             type="number"
@@ -106,11 +103,11 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
             onKeyDown={handleKeyDown}
             min={1}
             max={100}
-            className="w-28 bg-slate-800/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-accent-gold/50 focus:ring-1 focus:ring-accent-gold/20 transition-colors"
+            className="w-24 bg-bg-elevated border border-[rgba(99,132,184,0.12)] rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/10 transition-all"
           />
           <button
             onClick={addHolding}
-            className="p-2 rounded-lg bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20 transition-colors border border-accent-gold/20"
+            className="p-2.5 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all border border-gold/15 active:scale-95"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -123,17 +120,10 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
           </div>
         )}
       </div>
-
-      {holdings.length === 0 && (
-        <p className="text-slate-500 text-sm text-center py-4">
-          Add holdings above or load a preset portfolio
-        </p>
-      )}
     </div>
   )
 }
 
-// Extracted to avoid inline component definition (react-best-practices: rerender-no-inline-components)
 interface HoldingRowProps {
   holding: Holding
   onWeightChange: (weight: number) => void
@@ -142,12 +132,12 @@ interface HoldingRowProps {
 
 function HoldingRow({ holding, onWeightChange, onRemove }: HoldingRowProps) {
   return (
-    <div className="flex items-center gap-2 bg-slate-800/40 rounded-lg px-3 py-2">
-      <span className="font-mono text-sm font-semibold text-slate-100 w-20">{holding.ticker}</span>
+    <div className="flex items-center gap-3 bg-bg-elevated rounded-xl px-3.5 py-2.5 border border-[rgba(99,132,184,0.08)]">
+      <span className="font-mono text-sm font-bold text-slate-100 w-16 shrink-0">{holding.ticker}</span>
       <div className="flex-1">
-        <div className="w-full bg-slate-700/50 rounded-full h-1.5">
+        <div className="w-full bg-[rgba(99,132,184,0.08)] rounded-full h-1">
           <div
-            className="bg-accent-gold h-1.5 rounded-full transition-all"
+            className="bg-gold h-1 rounded-full transition-all"
             style={{ width: `${Math.min(holding.weight, 100)}%` }}
           />
         </div>
@@ -158,12 +148,12 @@ function HoldingRow({ holding, onWeightChange, onRemove }: HoldingRowProps) {
         onChange={(e) => onWeightChange(parseFloat(e.target.value) || 0)}
         min={1}
         max={100}
-        className="w-16 bg-transparent text-right text-sm font-mono text-slate-300 focus:outline-none focus:text-accent-gold"
+        className="w-14 bg-transparent text-right text-sm font-mono text-slate-400 focus:outline-none focus:text-gold"
       />
-      <span className="text-slate-500 text-xs">%</span>
+      <span className="text-slate-600 text-xs">%</span>
       <button
         onClick={onRemove}
-        className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+        className="p-1 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-400/10 transition-colors"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

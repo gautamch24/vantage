@@ -37,14 +37,18 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Redis — gracefully degrades if unavailable
 # ---------------------------------------------------------------------------
+REDIS_URL = os.getenv("REDIS_URL")
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 CACHE_TTL_SECONDS = 24 * 60 * 60
 
 try:
-    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+    if REDIS_URL:
+        redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+    else:
+        redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
     redis_client.ping()
-    logger.info("Redis connected at %s:%s", REDIS_HOST, REDIS_PORT)
+    logger.info("Redis connected")
 except Exception:
     logger.warning("Redis unavailable — running without cache")
     redis_client = None

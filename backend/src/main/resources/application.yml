@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5434/vantage
-    username: vantage
-    password: vantage
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5434/vantage}
+    username: ${DB_USERNAME:vantage}
+    password: ${DB_PASSWORD:vantage}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -14,19 +14,18 @@ spring:
         format_sql: true
   data:
     redis:
-      host: localhost
-      port: 6379
+      url: ${REDIS_URL:redis://localhost:6379}
   cache:
     type: redis
 
 data-service:
-  base-url: http://localhost:8002
+  base-url: ${DATA_SERVICE_URL:http://localhost:8002}
 
 anthropic:
   api-key: ${ANTHROPIC_API_KEY}
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:

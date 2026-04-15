@@ -1,8 +1,8 @@
 'use client'
 
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,20 +25,21 @@ interface TooltipPayload {
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
+  const delta = d.value - 100
   return (
-    <div className="bg-surface-card border border-slate-600/50 rounded-lg px-3 py-2 shadow-xl">
-      <p className="text-xs text-slate-400">{formatDate(d.date)}</p>
-      <p className="text-sm font-mono font-bold text-slate-100">
-        ${d.value.toFixed(2)}
-      </p>
-      <p className={`text-xs font-medium ${d.value >= 100 ? 'text-green-400' : 'text-red-400'}`}>
-        {d.value >= 100 ? '+' : ''}{(d.value - 100).toFixed(2)}%
+    <div
+      className="rounded-xl px-4 py-3 shadow-2xl border text-sm"
+      style={{ background: 'var(--bg-elevated)', borderColor: 'rgba(99,132,184,0.25)' }}
+    >
+      <p className="text-xs text-slate-500 mb-1">{formatDate(d.date)}</p>
+      <p className="font-mono font-bold text-slate-100 text-base">${d.value.toFixed(2)}</p>
+      <p className={`text-xs font-medium mt-0.5 ${delta >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+        {delta >= 0 ? '+' : ''}{delta.toFixed(2)}%
       </p>
     </div>
   )
 }
 
-// Tick formatters are stable functions — defined at module level (server-hoist-static-io)
 function formatXTick(value: string) {
   return formatDate(value)
 }
@@ -48,64 +49,77 @@ function formatYTick(value: number) {
 }
 
 export function TimeseriesChart({ data }: Props) {
-  const minValue = Math.min(...data.map((d) => d.value))
-  const maxValue = Math.max(...data.map((d) => d.value))
+  const values = data.map((d) => d.value)
+  const minValue = Math.min(...values)
+  const maxValue = Math.max(...values)
+  const isNegative = minValue < 100
 
-  // Sample data for x-axis ticks — show ~6 evenly spaced dates
   const tickIndices = Array.from(
     { length: Math.min(6, data.length) },
     (_, i) => Math.floor((i * (data.length - 1)) / 5),
   )
   const ticks = tickIndices.map((i) => data[i]?.date).filter(Boolean)
 
+  // Color based on where portfolio ended
+  const endValue = data[data.length - 1]?.value ?? 100
+  const lineColor = endValue >= 100 ? '#22c55e' : '#ef4444'
+  const gradientId = `area-${isNegative ? 'red' : 'green'}`
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-slate-400">
-          Portfolio value normalized to{' '}
-          <span className="text-slate-200 font-mono">$100</span> at scenario start
+      <div className="flex items-center justify-between mb-4 text-xs">
+        <p className="text-slate-500">
+          Normalized to{' '}
+          <span className="font-mono text-slate-300">$100</span> at scenario start
         </p>
-        <div className="flex items-center gap-4 text-xs">
-          <span className="text-green-400">
-            Peak: ${maxValue.toFixed(2)}
-          </span>
-          <span className="text-red-400">
-            Trough: ${minValue.toFixed(2)}
-          </span>
+        <div className="flex items-center gap-4">
+          <span className="text-green-400 font-mono">↑ ${maxValue.toFixed(2)}</span>
+          <span className="text-red-400 font-mono">↓ ${minValue.toFixed(2)}</span>
         </div>
       </div>
 
       <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={data} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+        <AreaChart data={data} margin={{ top: 4, right: 8, left: 4, bottom: 4 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={lineColor} stopOpacity={0.18} />
+              <stop offset="95%" stopColor={lineColor} stopOpacity={0.01} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,132,184,0.08)" vertical={false} />
           <XAxis
             dataKey="date"
             ticks={ticks}
             tickFormatter={formatXTick}
-            tick={{ fill: '#64748b', fontSize: 11 }}
-            axisLine={{ stroke: '#334155' }}
+            tick={{ fill: '#475569', fontSize: 10 }}
+            axisLine={{ stroke: 'rgba(99,132,184,0.1)' }}
             tickLine={false}
           />
           <YAxis
             tickFormatter={formatYTick}
-            tick={{ fill: '#64748b', fontSize: 11 }}
-            axisLine={{ stroke: '#334155' }}
+            tick={{ fill: '#475569', fontSize: 10 }}
+            axisLine={false}
             tickLine={false}
-            domain={[Math.floor(minValue * 0.98), Math.ceil(maxValue * 1.02)]}
-            width={55}
+            domain={[Math.floor(minValue * 0.97), Math.ceil(maxValue * 1.03)]}
+            width={52}
           />
           <Tooltip content={<CustomTooltip />} />
-          {/* Baseline at $100 (pre-crisis value) */}
-          <ReferenceLine y={100} stroke="#475569" strokeDasharray="4 4" strokeWidth={1} />
-          <Line
+          <ReferenceLine
+            y={100}
+            stroke="rgba(212,175,55,0.3)"
+            strokeDasharray="4 4"
+            strokeWidth={1}
+          />
+          <Area
             type="monotone"
             dataKey="value"
-            stroke="#3b82f6"
+            stroke={lineColor}
             strokeWidth={2}
+            fill={`url(#${gradientId})`}
             dot={false}
-            activeDot={{ r: 4, fill: '#3b82f6', stroke: '#0f172a', strokeWidth: 2 }}
+            activeDot={{ r: 4, fill: lineColor, stroke: 'var(--bg)', strokeWidth: 2 }}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   )

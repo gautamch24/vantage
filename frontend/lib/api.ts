@@ -20,3 +20,23 @@ export async function generateNarrative(request: NarrativeRequest): Promise<stri
   const { data } = await api.post<{ narrative: string }>('/api/narratives', request)
   return data.narrative
 }
+
+export interface AgentChatRequest {
+  holdings: { ticker: string; weight: number }[]
+  message: string
+}
+
+export interface ToolCallRecord {
+  tool: string
+  summary: string
+}
+
+export interface AgentChatResponse {
+  content: string
+  toolCallsMade: ToolCallRecord[]
+}
+
+export async function agentChat(request: AgentChatRequest): Promise<AgentChatResponse> {
+  const { data } = await api.post<AgentChatResponse>('/api/agent/chat', request)
+  return data
+}

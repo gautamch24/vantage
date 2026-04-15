@@ -11,7 +11,6 @@ interface Props {
 
 export function MetricCards({ metrics }: Props) {
   const cards = buildCards(metrics)
-
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
       {cards.map((card) => (
@@ -21,7 +20,6 @@ export function MetricCards({ metrics }: Props) {
   )
 }
 
-// Derived outside component to avoid re-computation on each render
 function buildCards(metrics: MetricsDto) {
   return [
     {
@@ -40,8 +38,8 @@ function buildCards(metrics: MetricsDto) {
     },
     {
       label: 'Recovery Time',
-      value: metrics.recoveryDays ? `${metrics.recoveryDays} days` : 'Not recovered',
-      sub: metrics.recoveryDays ? 'Days to prior peak' : 'Within scenario window',
+      value: metrics.recoveryDays ? `${metrics.recoveryDays}d` : '—',
+      sub: metrics.recoveryDays ? 'Days to prior peak' : 'Not recovered in window',
       icon: Clock,
       sentiment: !metrics.recoveryDays ? 'bad' : metrics.recoveryDays > 500 ? 'warn' : 'ok',
     },
@@ -53,7 +51,7 @@ function buildCards(metrics: MetricsDto) {
       sentiment: metrics.sharpeRatio > 0.5 ? 'ok' : metrics.sharpeRatio > -0.5 ? 'warn' : 'bad',
     },
     {
-      label: 'Annualized Volatility',
+      label: 'Ann. Volatility',
       value: formatPercent(metrics.annualizedVolatility),
       sub: 'Std dev of daily returns',
       icon: Activity,
@@ -61,7 +59,7 @@ function buildCards(metrics: MetricsDto) {
     },
     {
       label: 'Beta vs S&P 500',
-      value: formatNumber(metrics.beta),
+      value: formatNumber(metrics.beta) + 'x',
       sub: 'Market sensitivity',
       icon: Target,
       sentiment: metrics.beta > 1.5 ? 'bad' : metrics.beta > 1.1 ? 'warn' : 'ok',
@@ -79,28 +77,25 @@ interface MetricCardProps {
   sentiment: Sentiment
 }
 
-const sentimentStyles: Record<Sentiment, { value: string; border: string; bg: string }> = {
-  ok: { value: 'text-green-400', border: 'border-green-500/20', bg: 'bg-green-500/5' },
-  warn: { value: 'text-amber-400', border: 'border-amber-500/20', bg: 'bg-amber-500/5' },
-  bad: { value: 'text-red-400', border: 'border-red-500/20', bg: 'bg-red-500/5' },
+const styles: Record<Sentiment, { value: string; icon: string; border: string; dot: string }> = {
+  ok:   { value: 'text-green-400',  icon: 'text-green-400/60',  border: 'border-green-500/15',  dot: 'bg-green-500' },
+  warn: { value: 'text-amber-400',  icon: 'text-amber-400/60',  border: 'border-amber-500/15',  dot: 'bg-amber-500' },
+  bad:  { value: 'text-red-400',    icon: 'text-red-400/60',    border: 'border-red-500/15',    dot: 'bg-red-500' },
 }
 
 function MetricCard({ label, value, sub, icon: Icon, sentiment }: MetricCardProps) {
-  const styles = sentimentStyles[sentiment]
+  const s = styles[sentiment]
   return (
-    <div
-      className={cn(
-        'rounded-xl border p-4 flex flex-col gap-2',
-        styles.border,
-        styles.bg,
-      )}
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-400 font-medium">{label}</p>
-        <Icon className={cn('w-4 h-4', styles.value)} />
+    <div className={cn('glass-elevated rounded-xl border p-4', s.border)}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-slate-500 font-medium">{label}</span>
+        <Icon className={cn('w-3.5 h-3.5', s.icon)} />
       </div>
-      <p className={cn('text-2xl font-bold font-mono', styles.value)}>{value}</p>
-      <p className="text-xs text-slate-500">{sub}</p>
+      <div className="flex items-baseline gap-1.5">
+        <span className={cn('text-2xl font-bold font-mono leading-none', s.value)}>{value}</span>
+        <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', s.dot)} />
+      </div>
+      <p className="text-xs text-slate-600 mt-1.5">{sub}</p>
     </div>
   )
 }

@@ -4,113 +4,106 @@ import { useEffect, useState } from 'react'
 import { fetchScenarios } from '@/lib/api'
 import type { Scenario } from '@/types'
 import { cn } from '@/lib/utils'
-import { CalendarRange, ChevronRight } from 'lucide-react'
+import { CalendarRange, TrendingDown, CheckCircle2 } from 'lucide-react'
 
 interface Props {
   selected: Scenario | null
   onSelect: (scenario: Scenario) => void
 }
 
-// Scenario color accents keyed by name fragment
-const SCENARIO_COLORS: Record<string, string> = {
-  '2008': 'border-red-500/40 hover:border-red-400/60',
-  'COVID': 'border-orange-500/40 hover:border-orange-400/60',
-  'Dot-com': 'border-purple-500/40 hover:border-purple-400/60',
-  '2022': 'border-blue-500/40 hover:border-blue-400/60',
-  'Black': 'border-amber-500/40 hover:border-amber-400/60',
+const SCENARIO_STYLES: Record<string, { text: string; bg: string; border: string; ring: string }> = {
+  '2008':    { text: 'text-red-400',    bg: 'bg-red-500/8',    border: 'border-red-500/25',    ring: 'ring-red-500/20' },
+  'COVID':   { text: 'text-orange-400', bg: 'bg-orange-500/8', border: 'border-orange-500/25', ring: 'ring-orange-500/20' },
+  'Dot':     { text: 'text-purple-400', bg: 'bg-purple-500/8', border: 'border-purple-500/25', ring: 'ring-purple-500/20' },
+  '2022':    { text: 'text-amber-400',  bg: 'bg-amber-500/8',  border: 'border-amber-500/25',  ring: 'ring-amber-500/20' },
+  'Global':  { text: 'text-blue-400',   bg: 'bg-blue-500/8',   border: 'border-blue-500/25',   ring: 'ring-blue-500/20' },
 }
 
-function scenarioBorderClass(name: string): string {
-  for (const [key, cls] of Object.entries(SCENARIO_COLORS)) {
-    if (name.includes(key)) return cls
+function getStyle(name: string) {
+  for (const [key, style] of Object.entries(SCENARIO_STYLES)) {
+    if (name.includes(key)) return style
   }
-  return 'border-slate-600/40 hover:border-slate-500/60'
+  return { text: 'text-slate-300', bg: 'bg-slate-500/8', border: 'border-slate-500/20', ring: 'ring-slate-500/15' }
 }
 
 export function ScenarioSelector({ selected, onSelect }: Props) {
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchScenarios()
       .then(setScenarios)
-      .catch(() => setError('Failed to load scenarios. Is the backend running?'))
+      .catch(() => setLoadError('Failed to load scenarios. Is the backend running?'))
       .finally(() => setLoading(false))
   }, [])
 
   return (
-    <div className="bg-surface-card rounded-xl border border-slate-700/50 p-5">
-      <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wider mb-4">
-        Stress Scenario
-      </h2>
+    <div className="glass rounded-2xl border border-[rgba(99,132,184,0.12)] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          Stress Scenario
+        </h2>
+        {selected && (
+          <span className="text-xs text-green-400 flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" /> Selected
+          </span>
+        )}
+      </div>
 
       {loading && (
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-slate-700/30 rounded-lg animate-pulse" />
+            <div key={i} className="shimmer h-16 rounded-xl" />
           ))}
         </div>
       )}
 
-      {error && (
-        <p className="text-red-400 text-sm">{error}</p>
-      )}
+      {loadError && <p className="text-red-400 text-sm">{loadError}</p>}
 
-      {!loading && !error && (
+      {!loading && !loadError && (
         <div className="space-y-2">
-          {scenarios.map((scenario) => (
-            <ScenarioCard
-              key={scenario.id}
-              scenario={scenario}
-              isSelected={selected?.id === scenario.id}
-              borderClass={scenarioBorderClass(scenario.name)}
-              onSelect={onSelect}
-            />
-          ))}
+          {scenarios.map((scenario) => {
+            const style = getStyle(scenario.name)
+            const isSelected = selected?.id === scenario.id
+            return (
+              <button
+                key={scenario.id}
+                onClick={() => onSelect(scenario)}
+                className={cn(
+                  'w-full text-left px-4 py-3 rounded-xl border transition-all duration-150',
+                  isSelected
+                    ? `${style.bg} ${style.border} ring-1 ${style.ring}`
+                    : 'border-[rgba(99,132,184,0.08)] hover:border-[rgba(99,132,184,0.2)] bg-[rgba(20,30,46,0.4)]',
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <TrendingDown
+                    className={cn(
+                      'w-3.5 h-3.5 shrink-0 mt-0.5 transition-opacity',
+                      isSelected ? `${style.text} opacity-100` : 'opacity-0',
+                    )}
+                  />
+                  <div className="flex-1 min-w-0 -ml-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={cn('text-sm font-semibold', isSelected ? style.text : 'text-slate-200')}>
+                        {scenario.name}
+                      </span>
+                      <div className="flex items-center gap-1 text-xs text-slate-600 shrink-0">
+                        <CalendarRange className="w-3 h-3" />
+                        <span className="font-mono">{scenario.startDate.slice(0, 7)}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 leading-snug">
+                      {scenario.description}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
-  )
-}
-
-// Extracted to avoid inline component definition
-interface ScenarioCardProps {
-  scenario: Scenario
-  isSelected: boolean
-  borderClass: string
-  onSelect: (s: Scenario) => void
-}
-
-function ScenarioCard({ scenario, isSelected, borderClass, onSelect }: ScenarioCardProps) {
-  return (
-    <button
-      onClick={() => onSelect(scenario)}
-      className={cn(
-        'w-full text-left rounded-lg border p-3 transition-all',
-        isSelected
-          ? 'bg-accent-gold/10 border-accent-gold/50 ring-1 ring-accent-gold/20'
-          : cn('bg-slate-800/30', borderClass),
-      )}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p className={cn('text-sm font-semibold', isSelected ? 'text-accent-gold' : 'text-slate-200')}>
-            {scenario.name}
-          </p>
-          <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500">
-            <CalendarRange className="w-3 h-3" />
-            {scenario.startDate} → {scenario.endDate}
-          </div>
-          <p className="text-xs text-slate-400 mt-1 line-clamp-2">{scenario.description}</p>
-        </div>
-        <ChevronRight
-          className={cn(
-            'w-4 h-4 shrink-0 mt-0.5 transition-transform',
-            isSelected ? 'text-accent-gold rotate-90' : 'text-slate-600',
-          )}
-        />
-      </div>
-    </button>
   )
 }

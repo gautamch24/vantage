@@ -8,10 +8,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        bg: {
+          DEFAULT: '#080d14',
+          card: '#0e1520',
+          elevated: '#141e2e',
+        },
+        gold: {
+          DEFAULT: '#d4af37',
+          dim: 'rgba(212,175,55,0.15)',
+        },
+        border: {
+          DEFAULT: 'rgba(99,132,184,0.12)',
+          bright: 'rgba(99,132,184,0.25)',
+        },
+        // keep these for backwards compat
         surface: {
-          DEFAULT: '#0f172a',
-          card: '#1e293b',
-          elevated: '#283548',
+          DEFAULT: '#080d14',
+          card: '#0e1520',
+          elevated: '#141e2e',
         },
         accent: {
           gold: '#d4af37',
@@ -19,6 +33,10 @@ const config: Config = {
           red: '#ef4444',
           green: '#22c55e',
         },
+      },
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'Segoe UI', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'Menlo', 'Monaco', 'monospace'],
       },
     },
   },
