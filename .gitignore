@@ -1,0 +1,28 @@
+# Frontend
+frontend/.next/
+frontend/node_modules/
+frontend/.env.local
+
+# Backend (Spring Boot)
+backend/.gradle/
+backend/build/
+backend/*.jar
+backend/.env
+
+# Data Service (Python)
+data-service/__pycache__/
+data-service/.venv/
+data-service/venv/
+data-service/*.pyc
+data-service/.env
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+
+# Environment
+.env
