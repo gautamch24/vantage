@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { fetchScenarios } from '@/lib/api'
 import type { Scenario } from '@/types'
-import { cn } from '@/lib/utils'
 
 interface Props {
   selected: Scenario | null
@@ -23,61 +22,53 @@ export function ScenarioSelector({ selected, onSelect }: Props) {
   }, [])
 
   return (
-    <div className="card p-4">
+    <div className="panel p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-          Stress Scenario
-        </h2>
+        <h2 style={{ color: 'var(--text-1)', fontSize: 14, fontWeight: 600 }}>Stress Scenario</h2>
         {selected && (
-          <span className="text-xs font-mono" style={{ color: 'var(--green)' }}>
-            Selected
-          </span>
+          <span style={{ color: 'var(--green)', fontSize: 12, fontFamily: 'monospace' }}>Selected</span>
         )}
       </div>
 
       {loading && (
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="shimmer h-14" />
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {[...Array(5)].map((_, i) => <div key={i} className="shimmer" style={{ height: 56 }} />)}
         </div>
       )}
 
-      {loadError && (
-        <p className="text-xs" style={{ color: 'var(--red)' }}>{loadError}</p>
-      )}
+      {loadError && <p style={{ color: 'var(--red)', fontSize: 13 }}>{loadError}</p>}
 
       {!loading && !loadError && (
-        <div className="space-y-1.5">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {scenarios.map((scenario) => {
             const isSelected = selected?.id === scenario.id
             return (
               <button
                 key={scenario.id}
                 onClick={() => onSelect(scenario)}
-                className={cn(
-                  'w-full text-left px-3 py-2.5 rounded-md border transition-colors',
-                )}
                 style={{
-                  background: isSelected ? 'rgba(227,179,65,0.08)' : 'var(--bg-elevated)',
-                  borderColor: isSelected ? 'rgba(227,179,65,0.35)' : 'var(--border)',
+                  width: '100%', textAlign: 'left',
+                  padding: '10px 14px', borderRadius: 8, cursor: 'pointer',
+                  border: `1px solid ${isSelected ? 'rgba(212,175,55,0.35)' : 'var(--border)'}`,
+                  borderLeft: `3px solid ${isSelected ? 'var(--gold)' : 'transparent'}`,
+                  background: isSelected ? 'rgba(212,175,55,0.06)' : 'var(--bg-elevated)',
+                  transition: 'all 0.12s',
                 }}
+                onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.borderColor = 'var(--border-hover)' }}
+                onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.borderColor = 'var(--border)' }}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: isSelected ? 'var(--accent)' : 'var(--text-primary)' }}
-                  >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: isSelected ? 'var(--gold)' : 'var(--text-1)',
+                  }}>
                     {scenario.name}
                   </span>
-                  <span
-                    className="text-xs font-mono shrink-0"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-3)', flexShrink: 0 }}>
                     {scenario.startDate?.slice(0, 7)}
                   </span>
                 </div>
-                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                   {scenario.description}
                 </p>
               </button>

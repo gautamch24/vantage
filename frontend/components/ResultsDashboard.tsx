@@ -9,7 +9,8 @@ import { NarrativeCard } from './NarrativeCard'
 import { AgentChat } from './AgentChat'
 import { ArrowLeft } from 'lucide-react'
 import { formatPercent } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+
+type Tab = 'results' | 'agent'
 
 interface Props {
   result: SimulateResponse
@@ -18,130 +19,119 @@ interface Props {
   onReset: () => void
 }
 
-type Tab = 'results' | 'agent'
-
 export function ResultsDashboard({ result, scenario, holdings, onReset }: Props) {
   const [tab, setTab] = useState<Tab>('results')
-
-  const portfolioSummary = holdings
-    .map((h) => `${Number(h.weight).toFixed(0)}% ${h.ticker}`)
-    .join(', ')
-
-  const maxDrawdownPct = result.metrics.maxDrawdown * 100
+  const portfolioLabel = holdings.map((h) => `${Number(h.weight).toFixed(0)}% ${h.ticker}`).join(', ')
+  const pct = result.metrics.maxDrawdown * 100
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Top bar */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button
           onClick={onReset}
-          className="flex items-center gap-1.5 text-xs transition-colors px-2 py-1.5 rounded-md"
-          style={{ color: 'var(--text-secondary)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)' }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, fontSize: 13,
+            color: 'var(--text-2)', background: 'none', border: 'none', cursor: 'pointer',
+            padding: '6px 0',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-1)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-2)' }}
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          New simulation
+          <ArrowLeft size={14} /> New simulation
         </button>
-        <div className="text-right">
-          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{scenario.name}</p>
-          <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>{scenario.name}</p>
+          <p style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-3)', marginTop: 2 }}>
             {scenario.startDate} — {scenario.endDate}
           </p>
         </div>
       </div>
 
-      {/* Drawdown summary card */}
-      <div className="card p-5">
-        <div className="flex items-start justify-between gap-6">
+      {/* Drawdown hero */}
+      <div className="panel" style={{ padding: '24px 28px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32 }}>
           <div>
-            <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
               Peak-to-Trough Loss
             </p>
-            <p
-              className="text-5xl font-bold font-mono leading-none"
-              style={{ color: 'var(--red)' }}
-            >
+            <p style={{ fontFamily: 'monospace', fontSize: 60, fontWeight: 800, lineHeight: 1, color: 'var(--red)', letterSpacing: '-0.02em' }}>
               {formatPercent(result.metrics.maxDrawdown)}
             </p>
-            <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
-              {portfolioSummary}
-            </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 10 }}>{portfolioLabel}</p>
+            <p style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 4 }}>
               {result.metrics.recoveryDays
                 ? `Recovered in ${result.metrics.recoveryDays} days`
                 : 'Did not recover within scenario window'}
             </p>
           </div>
 
-          <div className="hidden sm:grid grid-cols-2 gap-x-8 gap-y-3 shrink-0">
-            <StatBox label="Worst Day"  value={formatPercent(result.metrics.worstSingleDay)}           color="var(--red)" />
-            <StatBox label="Beta"       value={`${Number(result.metrics.beta).toFixed(2)}x`}           color="var(--blue)" />
-            <StatBox label="Volatility" value={formatPercent(result.metrics.annualizedVolatility)}     color="var(--text-secondary)" />
-            <StatBox label="Sharpe"     value={Number(result.metrics.sharpeRatio).toFixed(2)}          color="var(--text-secondary)" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 36px', flexShrink: 0 }} className="hidden sm:grid">
+            <MiniStat label="Worst Day"  value={formatPercent(result.metrics.worstSingleDay)}       color="var(--red)" />
+            <MiniStat label="Beta"       value={`${Number(result.metrics.beta).toFixed(2)}x`}       color="var(--blue)" />
+            <MiniStat label="Volatility" value={formatPercent(result.metrics.annualizedVolatility)} color="var(--text-2)" />
+            <MiniStat label="Sharpe"     value={Number(result.metrics.sharpeRatio).toFixed(2)}      color="var(--text-2)" />
           </div>
         </div>
 
         {/* Severity bar */}
-        <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-          <div className="flex items-center justify-between text-xs mb-1.5" style={{ color: 'var(--text-muted)' }}>
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-3)', marginBottom: 6 }}>
             <span>0%</span>
             <span>Drawdown severity</span>
             <span>−100%</span>
           </div>
-          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-            <div
-              className="h-full rounded-full transition-all"
-              style={{
-                width: `${Math.min(Math.abs(maxDrawdownPct), 100)}%`,
-                background: maxDrawdownPct < -40 ? 'var(--red)' : maxDrawdownPct < -20 ? '#e3b341' : 'var(--green)',
-              }}
-            />
+          <div style={{ height: 4, background: 'var(--bg-elevated)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 2, transition: 'width 0.5s ease',
+              width: `${Math.min(Math.abs(pct), 100)}%`,
+              background: pct < -40 ? 'var(--red)' : pct < -20 ? 'var(--amber)' : 'var(--green)',
+            }} />
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div
-        className="flex border-b"
-        style={{ borderColor: 'var(--border)' }}
-      >
-        <TabButton active={tab === 'results'} onClick={() => setTab('results')} label="Risk Analysis" />
-        <TabButton active={tab === 'agent'}   onClick={() => setTab('agent')}   label="AI Analyst" badge />
+      {/* Tab bar */}
+      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)' }}>
+        {(['results', 'agent'] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            style={{
+              padding: '10px 18px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+              background: 'none', border: 'none',
+              borderBottom: `2px solid ${tab === t ? 'var(--gold)' : 'transparent'}`,
+              color: tab === t ? 'var(--text-1)' : 'var(--text-2)',
+              marginBottom: -1, display: 'flex', alignItems: 'center', gap: 8,
+              transition: 'color 0.12s',
+            }}
+          >
+            {t === 'results' ? 'Risk Analysis' : 'AI Analyst'}
+            {t === 'agent' && (
+              <span style={{
+                fontSize: 10, padding: '1px 6px', borderRadius: 4,
+                background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)',
+                color: 'var(--gold)', fontFamily: 'monospace',
+              }}>AI</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* Tab content */}
       {tab === 'results' && (
-        <div className="space-y-4 animate-fade-in">
-          <Section title="Risk Metrics">
-            <MetricCards metrics={result.metrics} />
-          </Section>
-
-          <NarrativeCard
-            scenarioId={scenario.id}
-            scenarioName={scenario.name}
-            holdings={holdings}
-            metrics={result.metrics}
-          />
-
-          <Section title="Portfolio Value">
-            <TimeseriesChart data={result.timeseries} />
-          </Section>
-
-          <Section title="Holdings Breakdown">
-            <HoldingsBreakdown breakdown={result.holdingsBreakdown} />
-          </Section>
-
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="animate-fade-in">
+          <Section title="Risk Metrics"><MetricCards metrics={result.metrics} /></Section>
+          <NarrativeCard scenarioId={scenario.id} scenarioName={scenario.name} holdings={holdings} metrics={result.metrics} />
+          <Section title="Portfolio Value Over Crisis Period"><TimeseriesChart data={result.timeseries} /></Section>
+          <Section title="Holdings Breakdown"><HoldingsBreakdown breakdown={result.holdingsBreakdown} /></Section>
           <Section title="Crisis Context">
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {scenario.crisisSummary}
-            </p>
+            <p style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.65 }}>{scenario.crisisSummary}</p>
           </Section>
         </div>
       )}
 
       {tab === 'agent' && (
-        <div className="card overflow-hidden animate-fade-in">
+        <div className="panel animate-fade-in" style={{ overflow: 'hidden' }}>
           <AgentChat holdings={holdings} />
         </div>
       )}
@@ -149,61 +139,22 @@ export function ResultsDashboard({ result, scenario, holdings, onReset }: Props)
   )
 }
 
-function StatBox({ label, value, color }: { label: string; value: string; color: string }) {
+function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div>
-      <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
-      <p className="text-lg font-bold font-mono" style={{ color }}>{value}</p>
+      <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>{label}</p>
+      <p style={{ fontFamily: 'monospace', fontSize: 20, fontWeight: 700, color }}>{value}</p>
     </div>
   )
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="card p-4">
-      <h3 className="text-xs font-medium mb-4" style={{ color: 'var(--text-muted)' }}>{title}</h3>
+    <div className="panel" style={{ padding: '20px 24px' }}>
+      <h3 style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+        {title}
+      </h3>
       {children}
     </div>
-  )
-}
-
-function TabButton({
-  active,
-  onClick,
-  label,
-  badge,
-}: {
-  active: boolean
-  onClick: () => void
-  label: string
-  badge?: boolean
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px',
-        active ? 'border-b-2' : 'border-transparent',
-      )}
-      style={{
-        borderBottomColor: active ? 'var(--accent)' : 'transparent',
-        color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-      }}
-    >
-      {label}
-      {badge && (
-        <span
-          className="text-xs px-1.5 py-0.5 rounded border font-mono"
-          style={{
-            color: 'var(--accent)',
-            borderColor: 'rgba(227,179,65,0.3)',
-            background: 'rgba(227,179,65,0.06)',
-            fontSize: '10px',
-          }}
-        >
-          AI
-        </span>
-      )}
-    </button>
   )
 }

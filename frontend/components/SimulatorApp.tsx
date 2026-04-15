@@ -6,7 +6,6 @@ import { ScenarioSelector } from './ScenarioSelector'
 import { ResultsDashboard } from './ResultsDashboard'
 import { runSimulation } from '@/lib/api'
 import type { Holding, Scenario, SimulateResponse } from '@/types'
-import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Step = 'build' | 'results'
@@ -14,8 +13,8 @@ type Step = 'build' | 'results'
 export function SimulatorApp() {
   const [holdings, setHoldings] = useState<Holding[]>([
     { ticker: 'AAPL', weight: 40 },
-    { ticker: 'JPM', weight: 40 },
-    { ticker: 'BND', weight: 20 },
+    { ticker: 'JPM',  weight: 40 },
+    { ticker: 'BND',  weight: 20 },
   ])
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null)
   const [step, setStep] = useState<Step>('build')
@@ -26,7 +25,7 @@ export function SimulatorApp() {
   const totalWeight = holdings.reduce((sum, h) => sum + h.weight, 0)
   const isReady = holdings.length > 0 && selectedScenario !== null && totalWeight === 100
 
-  const handleRunSimulation = useCallback(async () => {
+  const handleRun = useCallback(async () => {
     if (!selectedScenario || !isReady) return
     setLoading(true)
     setError(null)
@@ -35,11 +34,7 @@ export function SimulatorApp() {
       setResult(data)
       setStep('results')
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Simulation failed. Ensure the backend and data service are running.',
-      )
+      setError(err instanceof Error ? err.message : 'Simulation failed. Ensure backend and data service are running.')
     } finally {
       setLoading(false)
     }
@@ -56,13 +51,9 @@ export function SimulatorApp() {
     )
   }
 
-  const canRun = isReady && !loading
-  const hint = !holdings.length
-    ? 'Add at least one holding'
-    : !selectedScenario
-    ? 'Select a stress scenario'
-    : totalWeight !== 100
-    ? `Weights sum to ${totalWeight}% — must be 100%`
+  const hint = !holdings.length ? 'Add at least one holding'
+    : !selectedScenario ? 'Select a stress scenario'
+    : totalWeight !== 100 ? `Weights sum to ${totalWeight}% — must be 100%`
     : null
 
   return (
@@ -72,29 +63,19 @@ export function SimulatorApp() {
         <PortfolioBuilder holdings={holdings} onChange={setHoldings} />
 
         {/* Presets */}
-        <div className="card p-4">
-          <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
-            Load preset
+        <div className="panel p-4">
+          <p style={{ color: 'var(--text-3)', fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+            Preset Portfolios
           </p>
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((preset) => (
               <button
                 key={preset.name}
                 onClick={() => setHoldings(preset.holdings)}
-                className="text-xs px-3 py-1.5 rounded-md border transition-colors"
-                style={{
-                  background: 'var(--bg-elevated)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text-secondary)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--text-primary)'
-                  e.currentTarget.style.borderColor = 'var(--border-bright)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-secondary)'
-                  e.currentTarget.style.borderColor = 'var(--border)'
-                }}
+                className="panel-inner transition-colors"
+                style={{ padding: '5px 12px', fontSize: 12, color: 'var(--text-2)', cursor: 'pointer' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-1)'; e.currentTarget.style.borderColor = 'var(--border-hover)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border)' }}
               >
                 {preset.name}
               </button>
@@ -107,60 +88,59 @@ export function SimulatorApp() {
       <div className="space-y-4">
         <ScenarioSelector selected={selectedScenario} onSelect={setSelectedScenario} />
 
+        {/* Weight warning */}
         {holdings.length > 0 && totalWeight !== 100 && (
-          <div
-            className="flex items-center gap-2 text-xs rounded-md px-3 py-2.5 border"
-            style={{ color: '#e3b341', background: 'rgba(227,179,65,0.06)', borderColor: 'rgba(227,179,65,0.2)' }}
-          >
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <div style={{
+            padding: '10px 14px', borderRadius: 8, fontSize: 13,
+            background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.2)',
+            color: 'var(--gold)',
+          }}>
             Weights sum to {totalWeight}% — must equal 100%
           </div>
         )}
 
         {error && (
-          <div
-            className="flex items-start gap-2 text-xs rounded-md px-3 py-2.5 border"
-            style={{ color: 'var(--red)', background: 'rgba(248,81,73,0.06)', borderColor: 'rgba(248,81,73,0.2)' }}
-          >
-            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <div style={{
+            padding: '10px 14px', borderRadius: 8, fontSize: 13,
+            background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.2)',
+            color: 'var(--red)',
+          }}>
             {error}
           </div>
         )}
 
+        {/* Run button */}
         <button
-          onClick={handleRunSimulation}
-          disabled={!canRun}
-          className={cn(
-            'w-full flex items-center justify-center gap-2 px-5 py-3 rounded-md text-sm font-medium transition-all border',
-            canRun
-              ? 'cursor-pointer'
-              : 'cursor-not-allowed opacity-40',
-          )}
-          style={canRun ? {
-            background: 'var(--accent)',
-            borderColor: 'var(--accent)',
-            color: '#0d1117',
-          } : {
-            background: 'var(--bg-elevated)',
-            borderColor: 'var(--border)',
-            color: 'var(--text-muted)',
+          onClick={handleRun}
+          disabled={!isReady || loading}
+          style={{
+            width: '100%', padding: '13px 20px',
+            borderRadius: 10, fontSize: 14, fontWeight: 600,
+            border: 'none', cursor: isReady && !loading ? 'pointer' : 'not-allowed',
+            background: isReady && !loading ? 'var(--gold)' : 'var(--bg-elevated)',
+            color: isReady && !loading ? '#060d18' : 'var(--text-3)',
+            transition: 'all 0.15s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            opacity: isReady || loading ? 1 : 0.6,
+            boxShadow: isReady && !loading ? '0 4px 20px rgba(212,175,55,0.25)' : 'none',
           }}
         >
           {loading ? (
             <>
-              <div
-                className="w-4 h-4 border-2 rounded-full animate-spin"
-                style={{ borderColor: 'rgba(13,17,23,0.2)', borderTopColor: '#0d1117' }}
-              />
+              <span style={{
+                width: 16, height: 16, borderRadius: '50%',
+                border: '2px solid rgba(224,196,77,0.3)',
+                borderTopColor: '#060d18',
+                display: 'inline-block',
+                animation: 'spin 0.7s linear infinite',
+              }} />
               Running simulation...
             </>
-          ) : (
-            'Run Stress Test'
-          )}
+          ) : 'Run Stress Test'}
         </button>
 
         {hint && !loading && (
-          <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>{hint}</p>
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-3)' }}>{hint}</p>
         )}
       </div>
     </div>
@@ -168,38 +148,19 @@ export function SimulatorApp() {
 }
 
 const PRESETS = [
-  {
-    name: 'Tech-Heavy',
-    holdings: [
-      { ticker: 'AAPL', weight: 30 },
-      { ticker: 'MSFT', weight: 30 },
-      { ticker: 'GOOGL', weight: 25 },
-      { ticker: 'AMZN', weight: 15 },
-    ],
-  },
-  {
-    name: 'Balanced 60/40',
-    holdings: [
-      { ticker: 'SPY', weight: 60 },
-      { ticker: 'BND', weight: 40 },
-    ],
-  },
-  {
-    name: 'Financial Heavy',
-    holdings: [
-      { ticker: 'JPM', weight: 30 },
-      { ticker: 'GS', weight: 30 },
-      { ticker: 'BAC', weight: 20 },
-      { ticker: 'SPY', weight: 20 },
-    ],
-  },
-  {
-    name: 'Diversified',
-    holdings: [
-      { ticker: 'SPY', weight: 40 },
-      { ticker: 'BND', weight: 30 },
-      { ticker: 'GLD', weight: 15 },
-      { ticker: 'VNQ', weight: 15 },
-    ],
-  },
+  { name: 'Tech-Heavy', holdings: [
+    { ticker: 'AAPL', weight: 30 }, { ticker: 'MSFT', weight: 30 },
+    { ticker: 'GOOGL', weight: 25 }, { ticker: 'AMZN', weight: 15 },
+  ]},
+  { name: 'Balanced 60/40', holdings: [
+    { ticker: 'SPY', weight: 60 }, { ticker: 'BND', weight: 40 },
+  ]},
+  { name: 'Financial Heavy', holdings: [
+    { ticker: 'JPM', weight: 30 }, { ticker: 'GS', weight: 30 },
+    { ticker: 'BAC', weight: 20 }, { ticker: 'SPY', weight: 20 },
+  ]},
+  { name: 'Diversified', holdings: [
+    { ticker: 'SPY', weight: 40 }, { ticker: 'BND', weight: 30 },
+    { ticker: 'GLD', weight: 15 }, { ticker: 'VNQ', weight: 15 },
+  ]},
 ]

@@ -9,19 +9,15 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          DEFAULT: '#0d1117',
-          card: '#161b22',
-          elevated: '#21262d',
+          DEFAULT: '#060d18',
+          card:     '#0c1929',
+          elevated: '#112036',
+          input:    '#0a1525',
         },
-        accent: '#e3b341',
+        gold:   '#d4af37',
         border: {
-          DEFAULT: 'rgba(240,246,252,0.1)',
-          bright: 'rgba(240,246,252,0.18)',
-        },
-        text: {
-          primary: '#e6edf3',
-          secondary: '#8b949e',
-          muted: '#484f58',
+          DEFAULT: 'rgba(100,140,200,0.13)',
+          hover:   'rgba(100,140,200,0.24)',
         },
       },
       fontFamily: {

@@ -3,28 +3,27 @@
 import type { HoldingBreakdown } from '@/types'
 import { formatPercent } from '@/lib/utils'
 
-interface Props {
-  breakdown: HoldingBreakdown[]
-}
+interface Props { breakdown: HoldingBreakdown[] }
 
 export function HoldingsBreakdown({ breakdown }: Props) {
   const sorted = [...breakdown].sort((a, b) => a.drawdown - b.drawdown)
-
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
-            <th className="text-left text-xs font-medium pb-2.5 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Ticker</th>
-            <th className="text-right text-xs font-medium pb-2.5 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Weight</th>
-            <th className="text-right text-xs font-medium pb-2.5 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Drawdown</th>
-            <th className="text-left text-xs font-medium pb-2.5 pl-4 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Severity</th>
+            {['Ticker', 'Weight', 'Drawdown', 'Severity'].map((h, i) => (
+              <th key={h} style={{
+                textAlign: i === 0 || i === 3 ? 'left' : 'right',
+                paddingBottom: 10, paddingLeft: i === 3 ? 16 : 0,
+                fontSize: 11, fontWeight: 600, color: 'var(--text-3)',
+                textTransform: 'uppercase', letterSpacing: '0.07em',
+              }}>{h}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {sorted.map((h) => (
-            <HoldingRow key={h.ticker} holding={h} />
-          ))}
+          {sorted.map((h) => <HoldingRow key={h.ticker} holding={h} />)}
         </tbody>
       </table>
     </div>
@@ -32,36 +31,22 @@ export function HoldingsBreakdown({ breakdown }: Props) {
 }
 
 function HoldingRow({ holding }: { holding: HoldingBreakdown }) {
-  const drawdownPct = holding.drawdown * 100
-  const barColor =
-    drawdownPct < -40 ? 'var(--red)'
-    : drawdownPct < -20 ? '#e3b341'
-    : 'var(--green)'
-
+  const pct = holding.drawdown * 100
+  const color = pct < -40 ? 'var(--red)' : pct < -20 ? 'var(--amber)' : 'var(--green)'
   return (
-    <tr
-      style={{ borderBottom: '1px solid var(--border)' }}
-      className="transition-colors"
-      onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'rgba(240,246,252,0.02)' }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'transparent' }}
-    >
-      <td className="py-2.5">
-        <span className="font-mono font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-          {holding.ticker}
-        </span>
+    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+      <td style={{ padding: '11px 0', fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-1)' }}>
+        {holding.ticker}
       </td>
-      <td className="text-right py-2.5 font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: 12, color: 'var(--text-3)' }}>
         {Number(holding.weight).toFixed(1)}%
       </td>
-      <td className="text-right py-2.5 font-mono font-bold text-sm" style={{ color: barColor }}>
+      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color }}>
         {formatPercent(holding.drawdown)}
       </td>
-      <td className="pl-4 py-2.5">
-        <div className="w-24 rounded-full h-1" style={{ background: 'var(--bg-elevated)' }}>
-          <div
-            className="h-1 rounded-full"
-            style={{ width: `${Math.min(Math.abs(drawdownPct), 100)}%`, background: barColor }}
-          />
+      <td style={{ paddingLeft: 16 }}>
+        <div style={{ width: 96, height: 3, background: 'var(--bg)', borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${Math.min(Math.abs(pct), 100)}%`, background: color, borderRadius: 2 }} />
         </div>
       </td>
     </tr>
