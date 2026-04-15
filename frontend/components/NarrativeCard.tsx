@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { generateNarrative } from '@/lib/api'
 import type { MetricsDto, Holding } from '@/types'
-import { Sparkles, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface Props {
   scenarioId: string
@@ -38,18 +38,23 @@ export function NarrativeCard({ scenarioId, scenarioName, holdings, metrics }: P
   if (narrative) {
     return (
       <div
-        className="rounded-2xl border p-5"
-        style={{ background: 'rgba(212,175,55,0.04)', borderColor: 'rgba(212,175,55,0.15)' }}
+        className="card p-4"
+        style={{ borderColor: 'rgba(227,179,65,0.2)' }}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-gold" />
-            <span className="text-sm font-semibold text-slate-200">AI Narrative</span>
-            <span className="text-xs text-slate-500 hidden sm:inline">— {scenarioName}</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              AI Narrative
+            </span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              {scenarioName}
+            </span>
           </div>
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="text-slate-600 hover:text-slate-400 transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-secondary)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)' }}
           >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -58,7 +63,7 @@ export function NarrativeCard({ scenarioId, scenarioName, holdings, metrics }: P
         {expanded && (
           <div className="space-y-3">
             {narrative.split('\n\n').map((para, i) => (
-              <p key={i} className="text-slate-400 leading-relaxed text-sm">
+              <p key={i} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                 {para}
               </p>
             ))}
@@ -69,19 +74,17 @@ export function NarrativeCard({ scenarioId, scenarioName, holdings, metrics }: P
   }
 
   return (
-    <div className="glass rounded-2xl border border-[rgba(99,132,184,0.12)] p-5">
+    <div className="card p-4">
       <div className="flex items-start gap-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-gold" />
-            <span className="text-sm font-semibold text-slate-200">AI Narrative</span>
-          </div>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Plain-English explanation of what happened, why your portfolio was hit, and what it means
-            for your risk profile — from a Goldman Sachs AWM analyst perspective.
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+            AI Narrative
+          </p>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Plain-English explanation of what happened, why your holdings were hit, and what it means for your risk profile.
           </p>
           {error && (
-            <div className="flex items-center gap-1.5 text-red-400 text-xs mt-2">
+            <div className="flex items-center gap-1.5 text-xs mt-2" style={{ color: 'var(--red)' }}>
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               {error}
             </div>
@@ -91,18 +94,23 @@ export function NarrativeCard({ scenarioId, scenarioName, holdings, metrics }: P
         <button
           onClick={handleGenerate}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/20 bg-gold/8 text-gold hover:bg-gold/15 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          className="flex items-center gap-2 px-3 py-2 rounded-md border text-xs font-medium transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            color: 'var(--accent)',
+            borderColor: 'rgba(227,179,65,0.3)',
+            background: 'rgba(227,179,65,0.06)',
+          }}
         >
           {loading ? (
             <>
-              <div className="w-3.5 h-3.5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-              Generating…
+              <div
+                className="w-3 h-3 border-2 rounded-full animate-spin"
+                style={{ borderColor: 'rgba(227,179,65,0.3)', borderTopColor: 'var(--accent)' }}
+              />
+              Generating...
             </>
           ) : (
-            <>
-              <Sparkles className="w-3.5 h-3.5" />
-              Generate
-            </>
+            'Generate'
           )}
         </button>
       </div>

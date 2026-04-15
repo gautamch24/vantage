@@ -6,7 +6,7 @@ import { ScenarioSelector } from './ScenarioSelector'
 import { ResultsDashboard } from './ResultsDashboard'
 import { runSimulation } from '@/lib/api'
 import type { Holding, Scenario, SimulateResponse } from '@/types'
-import { AlertCircle, Zap } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Step = 'build' | 'results'
@@ -66,22 +66,35 @@ export function SimulatorApp() {
     : null
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left column */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* Left */}
       <div className="space-y-4">
         <PortfolioBuilder holdings={holdings} onChange={setHoldings} />
 
         {/* Presets */}
-        <div className="glass rounded-2xl border border-[rgba(99,132,184,0.12)] p-5">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">
-            Load Preset Portfolio
+        <div className="card p-4">
+          <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
+            Load preset
           </p>
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((preset) => (
               <button
                 key={preset.name}
                 onClick={() => setHoldings(preset.holdings)}
-                className="text-xs px-3 py-1.5 rounded-lg bg-bg-elevated border border-[rgba(99,132,184,0.1)] text-slate-400 hover:text-slate-200 hover:border-[rgba(99,132,184,0.25)] transition-all"
+                className="text-xs px-3 py-1.5 rounded-md border transition-colors"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-secondary)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                  e.currentTarget.style.borderColor = 'var(--border-bright)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-secondary)'
+                  e.currentTarget.style.borderColor = 'var(--border)'
+                }}
               >
                 {preset.name}
               </button>
@@ -90,51 +103,64 @@ export function SimulatorApp() {
         </div>
       </div>
 
-      {/* Right column */}
+      {/* Right */}
       <div className="space-y-4">
         <ScenarioSelector selected={selectedScenario} onSelect={setSelectedScenario} />
 
-        {/* Weight warning */}
         {holdings.length > 0 && totalWeight !== 100 && (
-          <div className="flex items-center gap-2 text-amber-400 text-xs bg-amber-400/8 rounded-xl px-4 py-3 border border-amber-400/15">
+          <div
+            className="flex items-center gap-2 text-xs rounded-md px-3 py-2.5 border"
+            style={{ color: '#e3b341', background: 'rgba(227,179,65,0.06)', borderColor: 'rgba(227,179,65,0.2)' }}
+          >
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             Weights sum to {totalWeight}% — must equal 100%
           </div>
         )}
 
         {error && (
-          <div className="flex items-start gap-2 text-red-400 text-xs bg-red-400/8 rounded-xl px-4 py-3 border border-red-400/15">
+          <div
+            className="flex items-start gap-2 text-xs rounded-md px-3 py-2.5 border"
+            style={{ color: 'var(--red)', background: 'rgba(248,81,73,0.06)', borderColor: 'rgba(248,81,73,0.2)' }}
+          >
             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             {error}
           </div>
         )}
 
-        {/* Run button */}
         <button
           onClick={handleRunSimulation}
           disabled={!canRun}
           className={cn(
-            'w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-base transition-all',
+            'w-full flex items-center justify-center gap-2 px-5 py-3 rounded-md text-sm font-medium transition-all border',
             canRun
-              ? 'bg-gold text-bg hover:brightness-110 active:scale-[0.99] shadow-lg shadow-gold/10'
-              : 'bg-[rgba(212,175,55,0.1)] text-gold/30 border border-gold/10 cursor-not-allowed',
+              ? 'cursor-pointer'
+              : 'cursor-not-allowed opacity-40',
           )}
+          style={canRun ? {
+            background: 'var(--accent)',
+            borderColor: 'var(--accent)',
+            color: '#0d1117',
+          } : {
+            background: 'var(--bg-elevated)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-muted)',
+          }}
         >
           {loading ? (
             <>
-              <div className="w-5 h-5 border-2 border-bg/20 border-t-bg rounded-full animate-spin" />
-              Running Simulation…
+              <div
+                className="w-4 h-4 border-2 rounded-full animate-spin"
+                style={{ borderColor: 'rgba(13,17,23,0.2)', borderTopColor: '#0d1117' }}
+              />
+              Running simulation...
             </>
           ) : (
-            <>
-              <Zap className="w-5 h-5" />
-              Run Stress Test
-            </>
+            'Run Stress Test'
           )}
         </button>
 
         {hint && !loading && (
-          <p className="text-center text-xs text-slate-600">{hint}</p>
+          <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>{hint}</p>
         )}
       </div>
     </div>

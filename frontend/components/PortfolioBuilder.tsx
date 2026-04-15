@@ -43,29 +43,39 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
     if (e.key === 'Enter') addHolding()
   }
 
+  const weightColor = totalWeight === 100
+    ? 'var(--green)'
+    : totalWeight > 100
+    ? 'var(--red)'
+    : 'var(--accent)'
+
   return (
-    <div className="glass rounded-2xl border border-[rgba(99,132,184,0.12)] p-5">
+    <div className="card p-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-          Portfolio Holdings
+        <h2 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+          Holdings
         </h2>
-        <div
-          className={cn(
-            'text-xs font-mono px-2.5 py-1 rounded-lg border',
-            totalWeight === 100
-              ? 'bg-green-500/10 text-green-400 border-green-500/20'
-              : totalWeight > 100
-              ? 'bg-red-500/10 text-red-400 border-red-500/20'
-              : 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-          )}
+        <span
+          className="text-xs font-mono px-2 py-0.5 rounded border"
+          style={{
+            color: weightColor,
+            borderColor: weightColor,
+            background: 'transparent',
+            opacity: 0.9,
+          }}
         >
           {totalWeight}% / 100%
-        </div>
+        </span>
       </div>
 
-      {/* Holdings list */}
+      {holdings.length === 0 && (
+        <p className="text-xs py-4 text-center" style={{ color: 'var(--text-muted)' }}>
+          Add holdings below or load a preset
+        </p>
+      )}
+
       {holdings.length > 0 && (
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1.5 mb-4">
           {holdings.map((holding, index) => (
             <HoldingRow
               key={holding.ticker}
@@ -77,23 +87,23 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
         </div>
       )}
 
-      {holdings.length === 0 && (
-        <p className="text-slate-600 text-sm text-center py-5">
-          Add holdings below or load a preset
-        </p>
-      )}
-
-      {/* Add form */}
       <div className="space-y-2">
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Ticker (e.g. AAPL)"
+            placeholder="Ticker"
             value={ticker}
             onChange={(e) => setTicker(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
             maxLength={10}
-            className="flex-1 bg-bg-elevated border border-[rgba(99,132,184,0.12)] rounded-xl px-3.5 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/10 transition-all"
+            className="flex-1 rounded-md px-3 py-2 text-sm font-mono focus:outline-none transition-colors"
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--border-bright)' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
           />
           <input
             type="number"
@@ -103,19 +113,33 @@ export function PortfolioBuilder({ holdings, onChange }: Props) {
             onKeyDown={handleKeyDown}
             min={1}
             max={100}
-            className="w-24 bg-bg-elevated border border-[rgba(99,132,184,0.12)] rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/10 transition-all"
+            className="w-24 rounded-md px-3 py-2 text-sm font-mono focus:outline-none transition-colors"
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--border-bright)' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
           />
           <button
             onClick={addHolding}
-            className="p-2.5 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all border border-gold/15 active:scale-95"
+            className="px-3 rounded-md border transition-colors"
+            style={{
+              background: 'var(--bg-elevated)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-secondary)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)' }}
           >
             <Plus className="w-4 h-4" />
           </button>
         </div>
 
         {inputError && (
-          <div className="flex items-center gap-1.5 text-amber-400 text-xs">
-            <AlertTriangle className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--accent)' }}>
+            <AlertTriangle className="w-3 h-3 shrink-0" />
             {inputError}
           </div>
         )}
@@ -132,13 +156,18 @@ interface HoldingRowProps {
 
 function HoldingRow({ holding, onWeightChange, onRemove }: HoldingRowProps) {
   return (
-    <div className="flex items-center gap-3 bg-bg-elevated rounded-xl px-3.5 py-2.5 border border-[rgba(99,132,184,0.08)]">
-      <span className="font-mono text-sm font-bold text-slate-100 w-16 shrink-0">{holding.ticker}</span>
+    <div
+      className="flex items-center gap-3 rounded-md px-3 py-2.5"
+      style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+    >
+      <span className="font-mono text-sm font-semibold w-14 shrink-0" style={{ color: 'var(--text-primary)' }}>
+        {holding.ticker}
+      </span>
       <div className="flex-1">
-        <div className="w-full bg-[rgba(99,132,184,0.08)] rounded-full h-1">
+        <div className="w-full rounded-full h-px" style={{ background: 'var(--border)' }}>
           <div
-            className="bg-gold h-1 rounded-full transition-all"
-            style={{ width: `${Math.min(holding.weight, 100)}%` }}
+            className="h-px rounded-full transition-all"
+            style={{ width: `${Math.min(holding.weight, 100)}%`, background: 'var(--accent)' }}
           />
         </div>
       </div>
@@ -148,12 +177,18 @@ function HoldingRow({ holding, onWeightChange, onRemove }: HoldingRowProps) {
         onChange={(e) => onWeightChange(parseFloat(e.target.value) || 0)}
         min={1}
         max={100}
-        className="w-14 bg-transparent text-right text-sm font-mono text-slate-400 focus:outline-none focus:text-gold"
+        className="w-12 bg-transparent text-right text-sm font-mono focus:outline-none"
+        style={{ color: 'var(--text-secondary)' }}
+        onFocus={(e) => { e.currentTarget.style.color = 'var(--text-primary)' }}
+        onBlur={(e) => { e.currentTarget.style.color = 'var(--text-secondary)' }}
       />
-      <span className="text-slate-600 text-xs">%</span>
+      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>%</span>
       <button
         onClick={onRemove}
-        className="p-1 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+        className="transition-colors"
+        style={{ color: 'var(--text-muted)' }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--red)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)' }}
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

@@ -9,29 +9,19 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          DEFAULT: '#080d14',
-          card: '#0e1520',
-          elevated: '#141e2e',
+          DEFAULT: '#0d1117',
+          card: '#161b22',
+          elevated: '#21262d',
         },
-        gold: {
-          DEFAULT: '#d4af37',
-          dim: 'rgba(212,175,55,0.15)',
-        },
+        accent: '#e3b341',
         border: {
-          DEFAULT: 'rgba(99,132,184,0.12)',
-          bright: 'rgba(99,132,184,0.25)',
+          DEFAULT: 'rgba(240,246,252,0.1)',
+          bright: 'rgba(240,246,252,0.18)',
         },
-        // keep these for backwards compat
-        surface: {
-          DEFAULT: '#080d14',
-          card: '#0e1520',
-          elevated: '#141e2e',
-        },
-        accent: {
-          gold: '#d4af37',
-          blue: '#3b82f6',
-          red: '#ef4444',
-          green: '#22c55e',
+        text: {
+          primary: '#e6edf3',
+          secondary: '#8b949e',
+          muted: '#484f58',
         },
       },
       fontFamily: {
